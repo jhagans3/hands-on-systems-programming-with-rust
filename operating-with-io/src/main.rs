@@ -6,7 +6,7 @@ const CHUNK_SIZE: usize = 16 * 1024;
 
 // cargo run -- --help
 #[derive(StructOpt, Debug)]
-// #[structopt(name = "basic")]
+#[structopt(name = "Pipe Viewer")]
 struct Opt {
     /// Read from a file instead of stdin
     #[structopt()]
