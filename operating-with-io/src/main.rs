@@ -1,4 +1,5 @@
-use std::io::{self, ErrorKind, Read, Result, Write};
+use std::fs::File;
+use std::io::{self, BufReader, BufWriter, ErrorKind, Read, Result, Write};
 use structopt::StructOpt;
 
 const CHUNK_SIZE: usize = 16 * 1024;
@@ -25,13 +26,34 @@ fn main() -> Result<()> {
     // cat myfile | target/debug/pipeviewer > myfile2
 
     let args = Opt::from_args();
+    // println!("{:#?}", args);
     let silent = args.silent;
+
+    // echo "hello" | cargo run -- > /dev/null
+    // echo "hello" | cargo run -- -o /dev/null
+    // echo "hello" | cargo run -- -o hello.txt
+    // cargo run -- hello.txt -o /dev/null
+    // cargo run -- hello.txt -s
+    // yes | cargo run -- -o yes.txt
+    // cargo run -- yes.txt -o /dev/null
+    // cargo run -- yes.txt -o yes2.txt
+    // cat yes2.txt | cargo run -- > yes3.txt
+
+    let mut reader: Box<dyn Read> = match args.infile {
+        Some(infile) => Box::new(BufReader::new(File::open(infile)?)),
+        _ => Box::new(BufReader::new(io::stdin())),
+    };
+
+    let mut writer: Box<dyn Write> = match args.outfile {
+        Some(outfile) => Box::new(BufWriter::new(File::create(outfile)?)),
+        _ => Box::new(BufWriter::new(io::stdout())),
+    };
 
     let mut total_bytes = 0;
     let mut buffer = [0; CHUNK_SIZE];
 
     loop {
-        let num_read = match io::stdin().read(&mut buffer) {
+        let num_read = match reader.read(&mut buffer) {
             Ok(0) => break,
             Ok(x) => x,
             Err(_) => break,
@@ -40,10 +62,10 @@ fn main() -> Result<()> {
         total_bytes += num_read;
 
         if !silent {
-            eprintln!("{}", total_bytes);
+            eprint!("\r{}", total_bytes);
         }
 
-        if let Err(e) = io::stdout().write_all(&buffer[..num_read]) {
+        if let Err(e) = writer.write_all(&buffer[..num_read]) {
             // yes | cargo run | head -n 1 > /dev/null
             // Error: Os { code: 32, kind: BrokenPipe, message: "Broken pipe" }
 
@@ -61,7 +83,7 @@ fn main() -> Result<()> {
     }
 
     if !silent {
-        eprintln!("total bytes: {}", total_bytes);
+        eprintln!("\r{}", total_bytes);
     }
 
     Ok(())
