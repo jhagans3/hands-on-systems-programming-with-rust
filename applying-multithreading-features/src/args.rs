@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Pipe Viewer")]
-pub struct Opt {
+pub struct Args {
     /// Read from a file instead of stdin
     #[structopt()]
     pub infile: Option<String>,
@@ -14,4 +14,10 @@ pub struct Opt {
     /// Display total bytes
     #[structopt(short, long)]
     pub silent: bool,
+}
+
+impl Args {
+    pub fn get_args() -> Self {
+        Args::from_args()
+    }
 }

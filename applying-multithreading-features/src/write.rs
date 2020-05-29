@@ -1,21 +1,30 @@
 use std::fs::File;
 use std::io::{self, BufWriter, ErrorKind, Result, Write};
+use std::sync::{Arc, Mutex};
 
-pub fn write(outfile: &Option<String>, buffer: &[u8]) -> Result<bool> {
+pub fn write_loop(outfile: &Option<String>, quit: Arc<Mutex<bool>>) -> Result<()> {
     let mut writer: Box<dyn Write> = match outfile {
         Some(outfile) => Box::new(BufWriter::new(File::create(outfile)?)),
         _ => Box::new(BufWriter::new(io::stdout())),
     };
 
-    if let Err(e) = writer.write_all(&buffer) {
-        // skip broken pipe error
-        if e.kind() == ErrorKind::BrokenPipe {
-            // false means "stop the program cleanly"
-            return Ok(false);
+    loop {
+        let buffer: Vec<u8> = Vec::new();
+        {
+            let quit = quit.lock().unwrap();
+            if *quit {
+                break;
+            }
         }
-        return Err(e);
+        if let Err(e) = writer.write_all(&buffer) {
+            // skip broken pipe error
+            if e.kind() == ErrorKind::BrokenPipe {
+                // stop the program cleanly
+                return Ok(());
+            }
+            return Err(e);
+        }
     }
 
-    // true means "keep going"
-    Ok(true)
+    Ok(())
 }
