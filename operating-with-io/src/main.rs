@@ -4,7 +4,7 @@ use structopt::StructOpt;
 
 const CHUNK_SIZE: usize = 16 * 1024;
 
-// cargo run -- --help
+// cargo run --bin pipeviewer -- --help
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Pipe Viewer")]
 struct Opt {
@@ -29,15 +29,15 @@ fn main() -> Result<()> {
     // println!("{:#?}", args);
     let silent = args.silent;
 
-    // echo "hello" | cargo run -- > /dev/null
-    // echo "hello" | cargo run -- -o /dev/null
-    // echo "hello" | cargo run -- -o hello.txt
-    // cargo run -- hello.txt -o /dev/null
-    // cargo run -- hello.txt -s
-    // yes | cargo run -- -o yes.txt
-    // cargo run -- yes.txt -o /dev/null
-    // cargo run -- yes.txt -o yes2.txt
-    // cat yes2.txt | cargo run -- > yes3.txt
+    // echo "hello" | cargo run --bin pipeviewer -- > /dev/null
+    // echo "hello" | cargo run --bin pipeviewer -- -o /dev/null
+    // echo "hello" | cargo run --bin pipeviewer -- -o hello.txt
+    // cargo run --bin pipeviewer -- hello.txt -o /dev/null
+    // cargo run --bin pipeviewer -- hello.txt -s
+    // yes | cargo run --bin pipeviewer -- -o yes.txt
+    // cargo run --bin pipeviewer -- yes.txt -o /dev/null
+    // cargo run --bin pipeviewer -- yes.txt -o yes2.txt
+    // cat yes2.txt | cargo run --bin pipeviewer -- > yes3.txt
 
     let mut reader: Box<dyn Read> = match args.infile {
         Some(infile) => Box::new(BufReader::new(File::open(infile)?)),
@@ -66,7 +66,7 @@ fn main() -> Result<()> {
         }
 
         if let Err(e) = writer.write_all(&buffer[..num_read]) {
-            // yes | cargo run | head -n 1 > /dev/null
+            // yes | cargo run --bin pipeviewer | head -n 1 > /dev/null
             // Error: Os { code: 32, kind: BrokenPipe, message: "Broken pipe" }
 
             // skip broken pipe error
@@ -75,7 +75,7 @@ fn main() -> Result<()> {
             }
             return Err(e);
 
-            // yes | cargo run | head -n 2 > /dev/null
+            // yes | cargo run --bin pipeviewer | head -n 2 > /dev/null
             // Oh no, an error! Broken pipe (os error 32)
             // eprint!("Oh no, an error! {}\n", e.to_string());
             // std::process::exit(1);

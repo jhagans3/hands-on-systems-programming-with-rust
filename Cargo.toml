@@ -1,5 +1,6 @@
 [workspace]
 
 members = [
-    "operating-with-io"
+    "operating-with-io",
+    "applying-multithreading-features"
 ]
