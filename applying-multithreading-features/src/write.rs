@@ -1,20 +1,17 @@
 use std::fs::File;
 use std::io::{self, BufWriter, ErrorKind, Result, Write};
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
 
-pub fn write_loop(outfile: &Option<String>, quit: Arc<Mutex<bool>>) -> Result<()> {
+pub fn write_loop(outfile: &Option<String>, write_rx: Receiver<Vec<u8>>) -> Result<()> {
     let mut writer: Box<dyn Write> = match outfile {
         Some(outfile) => Box::new(BufWriter::new(File::create(outfile)?)),
         _ => Box::new(BufWriter::new(io::stdout())),
     };
 
     loop {
-        let buffer: Vec<u8> = Vec::new();
-        {
-            let quit = quit.lock().unwrap();
-            if *quit {
-                break;
-            }
+        let buffer = write_rx.recv().unwrap();
+        if buffer.is_empty() {
+            break;
         }
         if let Err(e) = writer.write_all(&buffer) {
             // skip broken pipe error
